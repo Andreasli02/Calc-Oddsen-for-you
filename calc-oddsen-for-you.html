@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calc Oddsen for you</title>
+<style>
+  :root {
+    --accent: #2563eb;
+    --accent-dark: #1d4ed8;
+    --bg: #f3f4f6;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --text: #1f2937;
+    --muted: #6b7280;
+    --green: #16a34a;
+    --red: #dc2626;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    padding: 24px 16px 64px;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 28px; }
+  header h1 { margin: 0 0 4px; font-size: 1.9rem; letter-spacing: -0.5px; }
+  header p { margin: 0; color: var(--muted); font-size: 0.95rem; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .card h2 {
+    margin: 0 0 16px;
+    font-size: 1.05rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+  }
+
+  label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
+  input, select {
+    width: 100%;
+    padding: 9px 11px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.95rem;
+    background: #fff;
+    color: var(--text);
+  }
+  input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: var(--accent); }
+
+  /* Two team columns */
+  .teams-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+  .team-panel { display: flex; flex-direction: column; }
+  .team-name-input {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+  }
+
+  .add-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    align-items: end;
+  }
+  .add-actions { margin-top: 12px; }
+
+  button {
+    cursor: pointer;
+    font-family: inherit;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    padding: 10px 18px;
+    width: 100%;
+  }
+  .btn-primary:hover { background: var(--accent-dark); }
+  .btn-ghost {
+    background: transparent;
+    color: var(--red);
+    border: 1px solid var(--border);
+    padding: 8px 14px;
+  }
+  .btn-ghost:hover { background: #fef2f2; border-color: var(--red); }
+
+  .error { color: var(--red); font-size: 0.85rem; margin-top: 10px; min-height: 1.1em; }
+
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 9px 6px; border-bottom: 1px solid var(--border); }
+  th { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .remove-btn {
+    background: transparent;
+    color: var(--muted);
+    font-size: 1.2rem;
+    line-height: 1;
+    padding: 2px 8px;
+    border-radius: 6px;
+  }
+  .remove-btn:hover { background: #fef2f2; color: var(--red); }
+  .empty { color: var(--muted); font-style: italic; padding: 14px 6px; }
+
+  .bets-head { display: flex; justify-content: space-between; align-items: baseline; margin: 18px 0 6px; }
+  .bets-head h3 { margin: 0; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
+  .bet-count { color: var(--muted); font-size: 0.8rem; }
+
+  /* Results */
+  .results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 18px; }
+  .team-card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    background: #fafafa;
+  }
+  .team-card h3 { margin: 0 0 10px; font-size: 1.05rem; }
+  .team-card .row { display: flex; justify-content: space-between; font-size: 0.9rem; padding: 3px 0; }
+  .team-card .row span:last-child { font-variant-numeric: tabular-nums; font-weight: 600; }
+
+  .outcomes { border-top: 1px dashed var(--border); padding-top: 16px; }
+  .outcome {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 14px;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    background: #fafafa;
+    border: 1px solid var(--border);
+  }
+  .outcome.win-profit { border-color: var(--green); background: #f0fdf4; }
+  .outcome-label { font-weight: 600; }
+  .outcome-value { font-size: 1.15rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .profit { color: var(--green); }
+  .loss { color: var(--red); }
+  .total-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 14px;
+    margin-top: 4px;
+    font-weight: 600;
+  }
+  .total-row span:last-child { font-variant-numeric: tabular-nums; }
+
+  .toolbar { display: flex; justify-content: flex-end; margin-bottom: 20px; }
+
+  @media (max-width: 720px) {
+    .teams-grid { grid-template-columns: 1fr; }
+    .results-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Calc Oddsen for you</h1>
+    <p>Two-team moneyline bet calculator</p>
+  </header>
+
+  <!-- Per-team panels: each has its own name + add-bet form + bets list -->
+  <div class="teams-grid">
+    <!-- TEAM A -->
+    <section class="card team-panel">
+      <label for="teamA">Team name</label>
+      <input type="text" id="teamA" class="team-name-input" placeholder="Team Spirit" value="Team Spirit">
+
+      <div class="add-grid">
+        <div>
+          <label for="stakeA">Stake (innsats)</label>
+          <input type="text" id="stakeA" inputmode="decimal" placeholder="0,00">
+        </div>
+        <div>
+          <label for="oddsA">Odds</label>
+          <input type="text" id="oddsA" inputmode="decimal" placeholder="1,00">
+        </div>
+      </div>
+      <div class="add-actions">
+        <button class="btn-primary" id="addA">Add bet</button>
+      </div>
+      <div class="error" id="errorA"></div>
+
+      <div class="bets-head">
+        <h3>Bets</h3>
+        <span class="bet-count" id="countA">0 bets</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th class="num">Stake</th>
+            <th class="num">Odds</th>
+            <th class="num">Payout</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="bodyA"></tbody>
+      </table>
+    </section>
+
+    <!-- TEAM B -->
+    <section class="card team-panel">
+      <label for="teamB">Team name</label>
+      <input type="text" id="teamB" class="team-name-input" placeholder="Team Falcons" value="Team Falcons">
+
+      <div class="add-grid">
+        <div>
+          <label for="stakeB">Stake (innsats)</label>
+          <input type="text" id="stakeB" inputmode="decimal" placeholder="0,00">
+        </div>
+        <div>
+          <label for="oddsB">Odds</label>
+          <input type="text" id="oddsB" inputmode="decimal" placeholder="1,00">
+        </div>
+      </div>
+      <div class="add-actions">
+        <button class="btn-primary" id="addB">Add bet</button>
+      </div>
+      <div class="error" id="errorB"></div>
+
+      <div class="bets-head">
+        <h3>Bets</h3>
+        <span class="bet-count" id="countB">0 bets</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th class="num">Stake</th>
+            <th class="num">Odds</th>
+            <th class="num">Payout</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="bodyB"></tbody>
+      </table>
+    </section>
+  </div>
+
+  <div class="toolbar">
+    <button class="btn-ghost" id="clearBtn">Clear all bets</button>
+  </div>
+
+  <!-- Results -->
+  <section class="card">
+    <h2>Results</h2>
+    <div class="results-grid">
+      <div class="team-card" id="cardA">
+        <h3 id="cardATitle">Team A</h3>
+        <div class="row"><span>Total stake</span><span id="totStakeA">0,00</span></div>
+        <div class="row"><span>Payout if win</span><span id="payoutA">0,00</span></div>
+      </div>
+      <div class="team-card" id="cardB">
+        <h3 id="cardBTitle">Team B</h3>
+        <div class="row"><span>Total stake</span><span id="totStakeB">0,00</span></div>
+        <div class="row"><span>Payout if win</span><span id="payoutB">0,00</span></div>
+      </div>
+    </div>
+    <div class="outcomes">
+      <div class="outcome" id="outcomeA">
+        <span class="outcome-label" id="labelA">If Team A wins</span>
+        <span class="outcome-value" id="netA">0,00</span>
+      </div>
+      <div class="outcome" id="outcomeB">
+        <span class="outcome-label" id="labelB">If Team B wins</span>
+        <span class="outcome-value" id="netB">0,00</span>
+      </div>
+      <div class="total-row">
+        <span>Total staked overall</span>
+        <span id="totalStake">0,00</span>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+  // ---- State (in-memory only) ----
+  var bets = []; // { id, team: 'A'|'B', stake, odds }
+  var nextId = 1;
+
+  // ---- Elements ----
+  var teamAInput = document.getElementById('teamA');
+  var teamBInput = document.getElementById('teamB');
+
+  var fields = {
+    A: {
+      stake: document.getElementById('stakeA'),
+      odds: document.getElementById('oddsA'),
+      add: document.getElementById('addA'),
+      error: document.getElementById('errorA'),
+      body: document.getElementById('bodyA'),
+      count: document.getElementById('countA')
+    },
+    B: {
+      stake: document.getElementById('stakeB'),
+      odds: document.getElementById('oddsB'),
+      add: document.getElementById('addB'),
+      error: document.getElementById('errorB'),
+      body: document.getElementById('bodyB'),
+      count: document.getElementById('countB')
+    }
+  };
+
+  var clearBtn = document.getElementById('clearBtn');
+
+  // ---- Helpers ----
+  function teamName(key) {
+    if (key === 'A') return teamAInput.value.trim() || 'Team A';
+    return teamBInput.value.trim() || 'Team B';
+  }
+
+  function fmt(n) {
+    var fixed = (Math.round(n * 100) / 100).toFixed(2);
+    return fixed.replace('.', ',');
+  }
+
+  function fmtSigned(n) {
+    var rounded = Math.round(n * 100) / 100;
+    if (rounded === 0) rounded = 0;
+    var sign = rounded > 0 ? '+' : (rounded < 0 ? '-' : '');
+    return sign + fmt(Math.abs(rounded));
+  }
+
+  function parseNum(str) {
+    if (typeof str !== 'string') return NaN;
+    var cleaned = str.trim().replace(',', '.');
+    if (cleaned === '') return NaN;
+    return Number(cleaned);
+  }
+
+  // ---- Add / remove bets ----
+  function addBet(team) {
+    var f = fields[team];
+    f.error.textContent = '';
+    var stake = parseNum(f.stake.value);
+    var odds = parseNum(f.odds.value);
+
+    if (isNaN(stake) || stake <= 0) {
+      f.error.textContent = 'Stake must be a number greater than 0.';
+      return;
+    }
+    if (isNaN(odds) || odds < 1) {
+      f.error.textContent = 'Odds must be a number of at least 1.0.';
+      return;
+    }
+
+    bets.push({ id: nextId++, team: team, stake: stake, odds: odds });
+    f.stake.value = '';
+    f.odds.value = '';
+    f.stake.focus();
+    render();
+  }
+
+  function removeBet(id) {
+    bets = bets.filter(function (b) { return b.id !== id; });
+    render();
+  }
+
+  function clearAll() {
+    bets = [];
+    fields.A.error.textContent = '';
+    fields.B.error.textContent = '';
+    render();
+  }
+
+  // ---- Render one team's bets table ----
+  function renderTeamBets(team) {
+    var f = fields[team];
+    var teamBets = bets.filter(function (b) { return b.team === team; });
+    f.body.innerHTML = '';
+
+    if (teamBets.length === 0) {
+      var tr = document.createElement('tr');
+      var td = document.createElement('td');
+      td.colSpan = 4;
+      td.className = 'empty';
+      td.textContent = 'No bets yet.';
+      tr.appendChild(td);
+      f.body.appendChild(tr);
+    } else {
+      teamBets.forEach(function (b) {
+        var payout = b.stake * b.odds;
+        var tr = document.createElement('tr');
+
+        var tdStake = document.createElement('td');
+        tdStake.className = 'num';
+        tdStake.textContent = fmt(b.stake);
+
+        var tdOdds = document.createElement('td');
+        tdOdds.className = 'num';
+        tdOdds.textContent = fmt(b.odds);
+
+        var tdPayout = document.createElement('td');
+        tdPayout.className = 'num';
+        tdPayout.textContent = fmt(payout);
+
+        var tdRemove = document.createElement('td');
+        tdRemove.className = 'num';
+        var rm = document.createElement('button');
+        rm.className = 'remove-btn';
+        rm.innerHTML = '&times;';
+        rm.title = 'Remove bet';
+        rm.addEventListener('click', function () { removeBet(b.id); });
+        tdRemove.appendChild(rm);
+
+        tr.appendChild(tdStake);
+        tr.appendChild(tdOdds);
+        tr.appendChild(tdPayout);
+        tr.appendChild(tdRemove);
+        f.body.appendChild(tr);
+      });
+    }
+
+    f.count.textContent = teamBets.length + (teamBets.length === 1 ? ' bet' : ' bets');
+  }
+
+  // ---- Render ----
+  function render() {
+    renderTeamBets('A');
+    renderTeamBets('B');
+
+    // Aggregates
+    var totalStake = 0;
+    var stakeA = 0, stakeB = 0, payoutA = 0, payoutB = 0;
+    bets.forEach(function (b) {
+      var payout = b.stake * b.odds;
+      totalStake += b.stake;
+      if (b.team === 'A') { stakeA += b.stake; payoutA += payout; }
+      else { stakeB += b.stake; payoutB += payout; }
+    });
+
+    var netA = payoutA - totalStake;
+    var netB = payoutB - totalStake;
+
+    document.getElementById('cardATitle').textContent = teamName('A');
+    document.getElementById('cardBTitle').textContent = teamName('B');
+    document.getElementById('totStakeA').textContent = fmt(stakeA);
+    document.getElementById('totStakeB').textContent = fmt(stakeB);
+    document.getElementById('payoutA').textContent = fmt(payoutA);
+    document.getElementById('payoutB').textContent = fmt(payoutB);
+
+    document.getElementById('labelA').textContent = 'If ' + teamName('A') + ' wins';
+    document.getElementById('labelB').textContent = 'If ' + teamName('B') + ' wins';
+
+    var netAEl = document.getElementById('netA');
+    var netBEl = document.getElementById('netB');
+    netAEl.textContent = fmtSigned(netA);
+    netBEl.textContent = fmtSigned(netB);
+    netAEl.className = 'outcome-value ' + (netA >= 0 ? 'profit' : 'loss');
+    netBEl.className = 'outcome-value ' + (netB >= 0 ? 'profit' : 'loss');
+
+    document.getElementById('totalStake').textContent = fmt(totalStake);
+
+    var outA = document.getElementById('outcomeA');
+    var outB = document.getElementById('outcomeB');
+    outA.className = 'outcome' + (bets.length > 0 && netA > 0 ? ' win-profit' : '');
+    outB.className = 'outcome' + (bets.length > 0 && netB > 0 ? ' win-profit' : '');
+  }
+
+  // ---- Events ----
+  ['A', 'B'].forEach(function (team) {
+    var f = fields[team];
+    f.add.addEventListener('click', function () { addBet(team); });
+    [f.stake, f.odds].forEach(function (el) {
+      el.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); addBet(team); }
+      });
+    });
+  });
+  clearBtn.addEventListener('click', clearAll);
+  teamAInput.addEventListener('input', render);
+  teamBInput.addEventListener('input', render);
+
+  // ---- Init ----
+  render();
+</script>
+</body>
+</html>
